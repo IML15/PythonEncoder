@@ -10,7 +10,7 @@ ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
 
 
-def obtener_motor_cifrado(password: str, target_folder: str) -> Fernet:
+def get_encryption_engine(password: str, target_folder: str) -> Fernet:
     salt_file = os.path.join(target_folder, ".salt.key")
 
     if os.path.exists(salt_file):
@@ -46,7 +46,7 @@ def process_folder(action: str):
         return
 
     try:
-        motor = obtener_motor_cifrado(password, target_folder)
+        motor = get_encryption_engine(password, target_folder)
 
         for current_route, folders, files in os.walk(target_folder):
             for file_name in files:
