@@ -10,19 +10,19 @@ ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
 
 
-def obtener_motor_cifrado(password: str, carpeta_objetivo: str) -> Fernet:
-    archivo_salt = os.path.join(carpeta_objetivo, ".salt.key")
+def obtener_motor_cifrado(password: str, target_folder: str) -> Fernet:
+    salt_file = os.path.join(target_folder, ".salt.key")
 
-    if os.path.exists(archivo_salt):
-        with open(archivo_salt, "rb") as f:
+    if os.path.exists(salt_file):
+        with open(salt_file, "rb") as f:
             salt = f.read()
     else:
-        # Si la carpeta no existe o está mal puesta, os.walk no fallará pero no hará nada.
-        # Creamos la ruta si es necesario
-        if not os.path.exists(carpeta_objetivo):
-            os.makedirs(carpeta_objetivo)
+        # If the folder does not exist or is specified incorrectly, os.walk will not fail, but it will do nothing.
+        # We create the route if necessary.
+        if not os.path.exists(target_folder):
+            os.makedirs(target_folder)
         salt = os.urandom(16)
-        with open(archivo_salt, "wb") as f:
+        with open(salt_file, "wb") as f:
             f.write(salt)
 
     kdf = PBKDF2HMAC(
@@ -35,76 +35,76 @@ def obtener_motor_cifrado(password: str, carpeta_objetivo: str) -> Fernet:
     return Fernet(clave)
 
 
-def procesar_carpeta(accion: str):
+def process_folder(action: str):
 
-    carpeta_objetivo = entry_ruta.get()
+    target_folder = entry_ruta.get()
     password = entry_pass.get()
-    archivo_salt = os.path.join(carpeta_objetivo, ".salt.key")
+    archivo_salt = os.path.join(target_folder, ".salt.key")
 
-    if not carpeta_objetivo or not password:
-        messagebox.showwarning("Atención", "Por favor, rellena todos los campos.")
+    if not target_folder or not password:
+        messagebox.showwarning("Attention!", "Please fill in all the fields.")
         return
 
     try:
-        motor = obtener_motor_cifrado(password, carpeta_objetivo)
+        motor = obtener_motor_cifrado(password, target_folder)
 
-        for ruta_actual, carpetas, archivos in os.walk(carpeta_objetivo):
-            for nombre_archivo in archivos:
-                if nombre_archivo == ".salt.key":
+        for current_route, folders, files in os.walk(target_folder):
+            for file_name in files:
+                if file_name == ".salt.key":
                     continue
 
-                ruta_completa = os.path.join(ruta_actual, nombre_archivo)
+                complete_path = os.path.join(current_route, file_name)
 
-                with open(ruta_completa, "rb") as f:
-                    datos_originales = f.read()
+                with open(complete_path, "rb") as f:
+                    original_data = f.read()
 
-                if accion == "cifrar":
-                    datos_procesados = motor.encrypt(datos_originales)
-                elif accion == "descifrar":
-                    datos_procesados = motor.decrypt(datos_originales)
+                if action == "Encrypt":
+                    processed_data = motor.encrypt(original_data)
+                elif action == "Decrypt":
+                    processed_data = motor.decrypt(original_data)
 
-                with open(ruta_completa, "wb") as f:
-                    f.write(datos_procesados)
+                with open(complete_path, "wb") as f:
+                    f.write(processed_data)
 
-        messagebox.showinfo("Éxito", f"Operación de {accion} completada correctamente.")
+        messagebox.showinfo("Success", f"{action} operation completed successfully.")
 
     except Exception as e:
-        messagebox.showerror("Error", "Contraseña incorrecta o archivos dañados.")
+        messagebox.showerror("Error", "Incorrect password or damaged files.")
 
 
-# --- DISEÑO DE LA INTERFAZ GRÁFICA ---
-ventana = ctk.CTk()
-ventana.title("CryptoFolder Resguardo AES-256")
-ventana.geometry("600x350")
+# --- GRAPHICAL USER INTERFACE DESIGN ---
+window = ctk.CTk()
+window.title("CryptoFolder AES-256")
+window.geometry("600x350")
 
-# Título principal
-titulo = ctk.CTkLabel(ventana, text="HERRAMIENTA DE CIFRADO SEGURO", font=("Arial", 16, "bold"))
-titulo.pack(pady=20)
+# Main title
+title = ctk.CTkLabel(window, text="SECURE ENCRYPTION", font=("Arial", 16, "bold"))
+title.pack(pady=20)
 
-# Campo para la Ruta
-lbl_ruta = ctk.CTkLabel(ventana, text="Ruta de la carpeta:")
+# Field for the Route
+lbl_ruta = ctk.CTkLabel(window, text="Folder's path:")
 lbl_ruta.pack(anchor="w", padx=40)
-entry_ruta = ctk.CTkEntry(ventana, width=420, placeholder_text="/Users/iml15/carpeta_prueba")
+entry_ruta = ctk.CTkEntry(window, width=420, placeholder_text="/Users/iml15/folder's_path")
 entry_ruta.pack(pady=5)
 
-# Campo para la Contraseña
-lbl_pass = ctk.CTkLabel(ventana, text="Contraseña Maestra:")
+# Password field
+lbl_pass = ctk.CTkLabel(window, text="Master Password:")
 lbl_pass.pack(anchor="w", padx=40)
-entry_pass = ctk.CTkEntry(ventana, width=420, show="*", placeholder_text="Introduce una contraseña segura")
+entry_pass = ctk.CTkEntry(window, width=420, show="*", placeholder_text="Enter a secure password")
 entry_pass.pack(pady=5)
 
-# Contenedor para alinear los botones uno al lado del otro
-marco_botones = ctk.CTkFrame(ventana, fg_color="transparent")
-marco_botones.pack(pady=30)
+# Container for aligning the buttons side by side
+buttons = ctk.CTkFrame(window, fg_color="transparent")
+buttons.pack(pady=30)
 
-# Usamos funciones lambda para pasarle el argumento 'cifrar' o 'descifrar' a nuestra función
-btn_cifrar = ctk.CTkButton(marco_botones, text="Cifrar Carpeta", fg_color="firebrick", hover_color="maroon",
-                           command=lambda: procesar_carpeta("cifrar"))
-btn_cifrar.pack(side="left", padx=10)
+# We use lambda functions to pass the 'encrypt' or 'decrypt' argument to our function.
+btn_encrypt = ctk.CTkButton(buttons, text="Encrypt Folder", fg_color="firebrick", hover_color="maroon",
+                            command=lambda: process_folder("Encrypt"))
+btn_encrypt.pack(side="left", padx=10)
 
-btn_descifrar = ctk.CTkButton(marco_botones, text="Descifrar Carpeta", fg_color="green", hover_color="darkgreen",
-                              command=lambda: procesar_carpeta("descifrar"))
-btn_descifrar.pack(side="left", padx=10)
+btn_decrypt = ctk.CTkButton(buttons, text="Decrypt Folder", fg_color="green", hover_color="darkgreen",
+                            command=lambda: process_folder("Decrypt"))
+btn_decrypt.pack(side="left", padx=10)
 
-# Iniciar el bucle de la ventana
-ventana.mainloop()
+# Start the window loop
+window.mainloop()
