@@ -46,7 +46,7 @@ def process_folder(action: str):
         return
 
     try:
-        motor = get_encryption_engine(password, target_folder)
+        engine = get_encryption_engine(password, target_folder)
 
         for current_route, folders, files in os.walk(target_folder):
             for file_name in files:
@@ -59,9 +59,9 @@ def process_folder(action: str):
                     original_data = f.read()
 
                 if action == "Encrypt":
-                    processed_data = motor.encrypt(original_data)
+                    processed_data = engine.encrypt(original_data)
                 elif action == "Decrypt":
-                    processed_data = motor.decrypt(original_data)
+                    processed_data = engine.decrypt(original_data)
 
                 with open(complete_path, "wb") as f:
                     f.write(processed_data)
